@@ -52,9 +52,9 @@ class FlowElastic3D:
         y1 = 20. # Define max(y)
         z1 = 0. # Define max(z)
         z0 = -20. # Define min(z)
-        nx = 25 # Number of cells in x-direction
-        ny = 25 # Number of cells in y-direction
-        nz = 25 # Number of cells in z-direction
+        nx = 20 # Number of cells in x-direction
+        ny = 20 # Number of cells in y-direction
+        nz = 20 # Number of cells in z-direction
         self.mesh = BoxMesh(Point(x0, y0, z0), Point(x1, y1, z1), nx, ny, nz) # creates rectangular mesh
         self.Vh = FunctionSpace(self.mesh, "Lagrange", self.d) # Define function space on mesh (Lagrange with order = self.d)
         # Initialize mesh function for interior domains
@@ -115,4 +115,4 @@ class FlowElastic3D:
 
 TestProb = FlowElastic3D()
 x = TestProb.solve_system()
-print(len(x))
+
