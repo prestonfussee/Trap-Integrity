@@ -112,25 +112,25 @@ Volume(3) = {3};
 // Physical Surfaces: Used to label parts of the domain from Plane Surface data
 // Note: To be compatible with FEniCS, labeling must be only be by integer values with index beginning at 0
 
-// Bottom Boundary = 0
-// Side Boundary = 1
-// Top Boundary = 2
-// Bottom Salt Interface = 3
-// Top Salt Interface = 4
+// Bottom Boundary = 1
+// Side Boundary = 2
+// Top Boundary = 3
+// Bottom Salt Interface = 4
+// Top Salt Interface = 5
 
-Physical Surface(0) = {1}; // Bottom Boundary
-Physical Surface(1) = {14, 11, 5, 4, 10, 15, 6, 13, 8, 3, 9, 12}; // Side Boundaries
-Physical Surface(2) = {16}; // Top Boundary
-Physical Surface(3) = {2}; // Bottom Salt Interface
-Physical Surface(4) = {7}; // Top Salt Interface
+Physical Surface(1) = {1}; // Bottom Boundary
+Physical Surface(2) = {14, 11, 5, 4, 10, 15, 6, 13, 8, 3, 9, 12}; // Side Boundaries
+Physical Surface(3) = {16}; // Top Boundary
+Physical Surface(4) = {2}; // Bottom Salt Interface
+Physical Surface(5) = {7}; // Top Salt Interface
 
 // Physical Volumes: Used to label subdomains based on volume data
 // Note: To be compatible with FEniCS, labeling must be only be by integer values with index beginning at 0
 
-// Bottom Sandstone Volume = 5
-// Salt Volume = 6
-// Top Sandstone Volume = 7
+// Bottom Sandstone Volume = 6
+// Salt Volume = 7
+// Top Sandstone Volume = 8
 
-Physical Volume(5) = {1}; // Bottom Sandstone Volume
-Physical Volume(6) = {2}; // Salt Volume
-Physical Volume(7) = {3}; // Top Sandstone Volume
+Physical Volume(6) = {1}; // Bottom Sandstone Volume
+Physical Volume(7) = {2}; // Salt Volume
+Physical Volume(8) = {3}; // Top Sandstone Volume
