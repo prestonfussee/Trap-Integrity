@@ -1,0 +1,3 @@
+Firedrake is installed inside a virtual environment within the docker container.To load firedrake, type the following into the terminal
+
+source /home/firedrake/firedrake/bin/activate

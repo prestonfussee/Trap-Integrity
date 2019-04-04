@@ -1,0 +1,103 @@
+Setting up mesh across 1 processors
+Setting up boundary conditions
+Solving problem ...
+Computing flux across salt interface
+Wrote profile results to Hydrostatic.py.lprof
+Timer unit: 1e-06 s
+
+Total time: 1.51928 s
+File: Hydrostatic.py
+Function: import_mesh at line 15
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    15                                               @profile
+    16                                               def import_mesh(self,path_to_mesh_file,element_order):
+    17                                                   """ Imports the mesh from a .msh file. Element order must agree with
+    18                                                   that in the meshfile to establish appropriate function spaces"""
+    19         1         29.0     29.0      0.0          PETSc.Sys.Print('Setting up mesh across %d processors' % COMM_WORLD.size)
+    20         1     585777.0 585777.0     38.6          self.mesh = Mesh(path_to_mesh_file,comm=COMM_WORLD)
+    21         1          2.0      2.0      0.0          self.ele_order = element_order
+    22         1     491551.0 491551.0     32.4          self.normal = FacetNormal(self.mesh) # normal component to mesh
+    23                                                   # Physical Groups
+    24                                                   # These ID numbers must match the ones defined in the mesh file
+    25         1          2.0      2.0      0.0          self.bottom_id = 1 # Bottom Boundary
+    26         1          1.0      1.0      0.0          self.salt_bottom_id = 2 # Salt Bottom Interface
+    27         1          1.0      1.0      0.0          self.salt_top_id = 3  # Salt Top Interface
+    28         1          1.0      1.0      0.0          self.top_id = 4 #Top Boundary
+    29         1          1.0      1.0      0.0          self.side_id = 5 # Side Boundaries (all)
+    30         1          0.0      0.0      0.0          self.bottom_sand_vol_id = 6 # Bottom Sandstone Volume
+    31         1          0.0      0.0      0.0          self.salt_vol_id = 7  # Salt Volume
+    32         1          0.0      0.0      0.0          self.top_sand_vol_id = 8 # Top Sandstone Volume
+    33         1     441913.0 441913.0     29.1          self.funcspace = FunctionSpace(self.mesh,"CG",element_order) # Define function space
+
+Total time: 0.035663 s
+File: Hydrostatic.py
+Function: initialize_functions at line 35
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    35                                               @profile
+    36                                               def initialize_functions(self):
+    37                                                   ''' Create trial, test functions as well as indicator functions for
+    38                                                   subdomains '''
+    39         1         69.0     69.0      0.2          self.U = TrialFunction(self.funcspace)
+    40         1         36.0     36.0      0.1          self.V = TestFunction(self.funcspace)
+    41                                                   ### Create indicator functions that are 0 in one subdomain and 1 in the other
+    42         1      15343.0  15343.0     43.0          funcspace_constant = FunctionSpace(self.mesh,"DG",0)
+    43         1        132.0    132.0      0.4          self.indicator_sandbottom = Function(funcspace_constant,name="Indicator-Bottom-Sandstone-Volume")
+    44         1       9390.0   9390.0     26.3          par_loop( 'for ( int i=0; i < f.dofs; i++ ) f[i][0] = 1.0;', dx(self.bottom_sand_vol_id), {'f': (self.indicator_sandbottom, WRITE)} )
+    45         1        106.0    106.0      0.3          self.indicator_sandtop = Function(funcspace_constant,name="Indicator-Top-Sandstone-Volume")
+    46         1       3210.0   3210.0      9.0          par_loop( 'for ( int i=0; i < f.dofs; i++ ) f[i][0] = 1.0;', dx(self.top_sand_vol_id), {'f': (self.indicator_sandtop, WRITE)} )
+    47         1         97.0     97.0      0.3          self.indicator_salt = Function(funcspace_constant,name="Indicator-Salt-Volume")
+    48         1       7280.0   7280.0     20.4          par_loop( 'for ( int i=0; i < f.dofs; i++ ) f[i][0] = 1.0;',dx(self.salt_vol_id), {'f': (self.indicator_salt, WRITE)} )
+
+Total time: 0.000829 s
+File: Hydrostatic.py
+Function: boundary_conditons at line 54
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    54                                               @profile
+    55                                               def boundary_conditons(self,dirichlet_value):
+    56                                                   ''' Defines boundary conditions for top and bottom boundary
+    57                                                   where dirichlet and neumann are tuples representing (value,index) '''
+    58         1         70.0     70.0      8.4          PETSc.Sys.Print('Setting up boundary conditions')
+    59         1        444.0    444.0     53.6          self.BCDirichlet = Constant(dirichlet_value) # Value of Dirichlet Boundary Condition
+    60         1          1.0      1.0      0.1          self.BCDirichletIndex = self.top_id # Index of Dirichlet Boundary Condition
+    61         1        135.0    135.0     16.3          self.BCNeumann = Constant(9.81*self.rho) # Value of Neumann Boundary Condition
+    62         1          1.0      1.0      0.1          self.BCNeumannIndex = self.bottom_id # Index of Neumann Boundary Condition
+    63         1        178.0    178.0     21.5          self.bcs = DirichletBC(self.funcspace,self.BCDirichlet,self.BCDirichletIndex) # Create Boundary Condition
+
+Total time: 2.3104 s
+File: Hydrostatic.py
+Function: solve_system at line 65
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    65                                               @profile
+    66                                               def solve_system(self):
+    67         1         16.0     16.0      0.0          PETSc.Sys.Print('Solving problem ...')
+    68                                                   a = dot((self.k/self.mu)*grad(self.U), grad(self.V))*dx(self.bottom_sand_vol_id) + \
+    69         1       1283.0   1283.0      0.1          dot((self.k/self.mu)*grad(self.U), grad(self.V))*dx(self.salt_vol_id) + \
+    70         1        732.0    732.0      0.0          dot((self.k/self.mu)*grad(self.U), grad(self.V))*dx(self.top_sand_vol_id)
+    71                                                   L = (self.k/self.mu)*self.BCNeumann*self.V*ds(self.BCNeumannIndex) - \
+    72                                                   dot((self.k/self.mu)*self.g*self.rho, grad(self.V))*dx \
+    73         1       1473.0   1473.0      0.1          + (self.k/self.mu)*self.rho*dot(self.g,self.normal)*self.V*ds(self.BCNeumannIndex)
+    74         1        125.0    125.0      0.0          self.Pressure = Function(self.funcspace)
+    75         1    2306768.0 2306768.0     99.8          solve(a == L, self.Pressure, bcs=self.bcs, solver_parameters={"ksp_type": "gmres"})
+
+Total time: 0.033352 s
+File: Hydrostatic.py
+Function: comp_flux_interface at line 79
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    79                                               @profile
+    80                                               def comp_flux_interface(self):
+    81                                                   ''' Computes the flux across the salt bottom interface. Note this is
+    82                                                   reported as a volumetric flux and should be scaled by the porosity '''
+    83         1         30.0     30.0      0.1          PETSc.Sys.Print('Computing flux across salt interface')
+    84         1      33321.0  33321.0     99.9          self.flux_across_interface = -assemble(dot(grad(self.Pressure),self.normal)('+')*dS(self.salt_bottom_id))
+    85         1          1.0      1.0      0.0          return self.flux_across_interface
+
